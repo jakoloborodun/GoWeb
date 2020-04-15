@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"time"
 )
 
 func GetURLsForSearch() []string {
@@ -17,29 +18,74 @@ func GetURLsForSearch() []string {
 		"https://ru.wikipedia.org/wiki/Drush",
 		"https://music.yandex.ru/home",
 		"https://geekbrains.ru/education",
+		"https://drushcommands.com/",
+		"https://ru.wikipedia.org/wiki/Drush",
+		"https://music.yandex.ru/home",
+		"https://geekbrains.ru/education",
 	}
 }
 
-func findMatches(search string, urls []string) (matches []string) {
-	for _, url := range urls {
-		resp, err := http.Get(url)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-		defer resp.Body.Close()
+// A struct to store the results for each request including url and response body.
+type result struct {
+	url  string
+	body string
+}
 
-		bts, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Println(err.Error())
-			continue
-		}
-		respText := string(bts)
-		if strings.Contains(respText, search) {
-			matches = append(matches, url)
+func getResultsParallel(search string, urls []string) []result {
+	// The channel collect the http request results
+	resultsCh := make(chan *result)
+
+	// Make sure we close the channel when we're done
+	defer func() {
+		close(resultsCh)
+	}()
+
+	for _, url := range urls {
+		go func(url string) {
+
+			// Send the request and put the response in a result struct
+			// along with the url.
+			resp, _ := http.Get(url)
+			defer resp.Body.Close()
+
+			bts, _ := ioutil.ReadAll(resp.Body)
+			respText := string(bts)
+			result := &result{url, respText}
+
+			// Send the result struct through the resultsCh
+			resultsCh <- result
+
+		}(url)
+	}
+
+	var results []result
+
+	// start listening for any results over the resultsChan
+	// once we get a result append it to the result slice
+	for {
+		result := <-resultsCh
+		results = append(results, *result)
+
+		// if we've reached the expected amount of urls then stop
+		if len(results) == len(urls) {
+			break
 		}
 	}
 
+	return results
+}
+
+func findMatches(search string, urls []string) (matches []string) {
+	start := time.Now()
+	results := getResultsParallel(search, urls)
+
+	for _, result := range results {
+		if strings.Contains(result.body, search) {
+			matches = append(matches, result.url)
+		}
+	}
+
+	fmt.Printf("%.2fs elapsed\n", time.Since(start).Seconds())
 	return
 }
 
