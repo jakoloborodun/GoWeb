@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/go-chi/chi"
+	uuid "github.com/satori/go.uuid"
 	"goweb/hw2/finder"
 	"log"
 	"net/http"
@@ -21,6 +22,7 @@ func main() {
 	router := chi.NewRouter()
 	router.Route("/", func(r chi.Router) {
 		r.Post("/search", PostSearchHandler)
+		r.Get("/search", ReadCookieHandler)
 	})
 
 	go func() {
@@ -33,6 +35,7 @@ func main() {
 }
 
 func PostSearchHandler(w http.ResponseWriter, r *http.Request) {
+	SetCookieHandler(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	var search Search
 	err := json.NewDecoder(r.Body).Decode(&search)
@@ -44,4 +47,20 @@ func PostSearchHandler(w http.ResponseWriter, r *http.Request) {
 	search.Sites = finder.FindMatches(search.Search, search.Sites)
 
 	json.NewEncoder(w).Encode(search)
+}
+
+func SetCookieHandler(w http.ResponseWriter, r *http.Request) {
+	cookie := &http.Cookie{
+		Name:  "GoName",
+		Value: uuid.Must(uuid.NewV4()).String(),
+		Path:  "/search",
+	}
+
+	http.SetCookie(w, cookie)
+}
+
+func ReadCookieHandler(w http.ResponseWriter, r *http.Request) {
+	if cookie, err := r.Cookie("GoName"); err == nil {
+		w.Write([]byte(cookie.Value))
+	}
 }
