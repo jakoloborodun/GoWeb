@@ -1,13 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"github.com/Sirupsen/logrus"
+	"github.com/go-chi/chi"
 	"html/template"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -19,7 +23,7 @@ type Server struct {
 
 type BlogPosts []BlogPost
 type BlogPost struct {
-	ID      int
+	ID      int64
 	Title   string
 	Text    string
 	Created time.Time
@@ -30,7 +34,7 @@ type BlogPost struct {
 func main() {
 	stopChan := make(chan os.Signal)
 
-	mux := http.NewServeMux()
+	r := chi.NewRouter()
 	lg := logrus.New()
 
 	srv := Server{
@@ -56,15 +60,18 @@ func main() {
 		},
 	}
 
-	mux.HandleFunc("/blog", srv.getBlogPosts)
+	r.Route("/", func(r chi.Router) {
+		r.Get("/blog", srv.getBlogPosts)
+		r.Get("/blog/{id}", srv.getSingleBlogPost)
+	})
 
-	imageServer := http.FileServer(http.Dir("./static/images/"))
-
-	mux.Handle("/images/", http.StripPrefix("/images", imageServer))
+	workDir, _ := os.Getwd()
+	filesDir := http.Dir(filepath.Join(workDir, "static/images"))
+	FileServer(r, "/images", filesDir)
 
 	go func() {
 		lg.Info("Starting server on :8080...")
-		log.Fatal(http.ListenAndServe(":8080", mux))
+		log.Fatal(http.ListenAndServe(":8080", r))
 	}()
 
 	signal.Notify(stopChan, os.Interrupt, os.Kill)
@@ -73,15 +80,64 @@ func main() {
 }
 
 func (srv *Server) getBlogPosts(w http.ResponseWriter, r *http.Request) {
-	file, _ := os.Open("./static/index.html")
-	defer file.Close()
+	tpl, err := template.ParseFiles("static/templates/index.html", "static/templates/header.html", "static/templates/footer.html")
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
+		return
+	}
 
-	data, _ := ioutil.ReadAll(file)
-
-	tpl := template.Must(template.New("Page").Parse(string(data)))
-	err := tpl.ExecuteTemplate(w, "Page", srv)
+	err = tpl.ExecuteTemplate(w, "Page", srv)
 	if err != nil {
 		srv.lg.WithError(err).Error("template")
 		w.WriteHeader(http.StatusInternalServerError)
 	}
+}
+
+func (srv *Server) getSingleBlogPost(w http.ResponseWriter, r *http.Request) {
+	tpl, err := template.ParseFiles("static/templates/post.html", "static/templates/header.html", "static/templates/footer.html")
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
+		return
+	}
+
+	postIDStr := chi.URLParam(r, "id")
+	PostID, _ := strconv.ParseInt(postIDStr, 10, 64)
+
+	postsMap := map[int64]BlogPost{}
+	for _, post := range srv.Posts {
+		postsMap[post.ID] = post
+	}
+
+	post, found := postsMap[PostID]
+	if !found {
+		http.NotFound(w, r)
+		return
+	}
+
+	err = tpl.ExecuteTemplate(w, "post", post)
+	if err != nil {
+		srv.lg.WithError(err).Error("template")
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+// FileServer conveniently sets up a http.FileServer handler to serve
+// static files from a http.FileSystem.
+func FileServer(r chi.Router, path string, root http.FileSystem) {
+	if strings.ContainsAny(path, "{}*") {
+		panic("FileServer does not permit any URL parameters.")
+	}
+
+	if path != "/" && path[len(path)-1] != '/' {
+		r.Get(path, http.RedirectHandler(path+"/", 301).ServeHTTP)
+		path += "/"
+	}
+	path += "*"
+
+	r.Get(path, func(w http.ResponseWriter, r *http.Request) {
+		rctx := chi.RouteContext(r.Context())
+		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
+		fs := http.StripPrefix(pathPrefix, http.FileServer(root))
+		fs.ServeHTTP(w, r)
+	})
 }

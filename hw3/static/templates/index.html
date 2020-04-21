@@ -1,44 +1,14 @@
 {{ define "Page" }}
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <title>{{- /*gotype: goweb/hw3.Server*/ -}}
-            {{ .Title }}</title>
-        {{template "head"}}
-    </head>
-    <body>
+
     {{ template "header" }}
 
     <div class="uk-container">
-        <h1>{{ .Title }}</h1>
+        <h1 class="uk-padding uk-padding-remove-left uk-padding-remove-right">{{ .Title }}</h1>
         {{ template "Posts" . }}
     </div>
-    </body>
-    </html>
-{{ end }}
 
-{{ define "head" }}
-    <meta charset="UTF-8">
-    <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
-    <!-- UIkit CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.4.1/dist/css/uikit.min.css"/>
+    {{ template "footer" }}
 
-    <!-- UIkit JS -->
-    <script src="https://cdn.jsdelivr.net/npm/uikit@3.4.1/dist/js/uikit.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/uikit@3.4.1/dist/js/uikit-icons.min.js"></script>
-{{ end }}
-
-{{ define "header" }}
-    <header>
-        <nav class="uk-navbar-container" uk-navbar>
-            <a class="uk-navbar-item uk-logo" href="/blog">Blog</a>
-            <div class="uk-navbar-left">
-                <ul class="uk-navbar-nav">
-                    <li><a href="/blog/add">New post</a></li>
-                </ul>
-            </div>
-        </nav>
-    </header>
 {{ end }}
 
 {{ define "Posts" }}
@@ -52,7 +22,7 @@
                         <div class="uk-card-header">
                             <div class="uk-grid-small uk-flex-middle" uk-grid>
                                 <div class="uk-width-auto">
-                                    <img class="uk-border-circle" width="50" height="50" src="images/600_ava.jpeg">
+                                    <img class="uk-border-circle" width="50" height="50" src="../images/600_ava.jpeg">
                                 </div>
                                 <div class="uk-width-expand">
                                     <h3 class="uk-card-title uk-margin-remove-bottom">
