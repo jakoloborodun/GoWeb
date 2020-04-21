@@ -1,0 +1,83 @@
+{{ define "Page" }}
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <title>{{- /*gotype: goweb/hw3.Server*/ -}}
+            {{ .Title }}</title>
+        {{template "head"}}
+    </head>
+    <body>
+    {{ template "header" }}
+
+    <div class="uk-container">
+        <h1>{{ .Title }}</h1>
+        {{ template "Posts" . }}
+    </div>
+    </body>
+    </html>
+{{ end }}
+
+{{ define "head" }}
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
+    <!-- UIkit CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.4.1/dist/css/uikit.min.css"/>
+
+    <!-- UIkit JS -->
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.4.1/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.4.1/dist/js/uikit-icons.min.js"></script>
+{{ end }}
+
+{{ define "header" }}
+    <header>
+        <nav class="uk-navbar-container" uk-navbar>
+            <a class="uk-navbar-item uk-logo" href="/blog">Blog</a>
+            <div class="uk-navbar-left">
+                <ul class="uk-navbar-nav">
+                    <li><a href="/blog/add">New post</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+{{ end }}
+
+{{ define "Posts" }}
+    <div class="uk-child-width-1-2@m" uk-grid>
+        {{- /*gotype: goweb/hw3.Server*/ -}}
+        {{ range $key, $value := .Posts }}
+            {{- /*gotype: goweb/hw3.BlogPost*/ -}}
+            {{ if .Status }}
+                <div>
+                    <div class="uk-card uk-card-default">
+                        <div class="uk-card-header">
+                            <div class="uk-grid-small uk-flex-middle" uk-grid>
+                                <div class="uk-width-auto">
+                                    <img class="uk-border-circle" width="50" height="50" src="images/600_ava.jpeg">
+                                </div>
+                                <div class="uk-width-expand">
+                                    <h3 class="uk-card-title uk-margin-remove-bottom">
+                                        <a href="/blog/{{ .ID }}" class="uk-link-heading">{{ .Title }}</a>
+                                    </h3>
+                                    <p class="uk-text-meta uk-margin-remove-top">
+                                        <time datetime="{{ .Created.Format "2006-01-02 15:04" }}">{{ .Created.Format "Jan 02, 2006 15:04" }}</time>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="uk-card-body">
+                            <p>{{ .Text }}</p>
+                            <div class="uk-align-left">
+                                {{ range .Tags }}
+                                    <span class="uk-badge uk-label">{{ . }}</span>
+                                {{ end }}
+                            </div>
+                        </div>
+                        <div class="uk-card-footer">
+                            <a href="/blog/{{ .ID }}" class="uk-button uk-button-text">Read more</a>
+                        </div>
+                    </div>
+                </div>
+            {{ end }}
+        {{ end }}
+    </div>
+{{ end }}
