@@ -1,5 +1,5 @@
 {{- /*gotype: goweb/hw3.BlogPost*/ -}}
-{{ define "post" }}
+{{ define "post_view" }}
     {{ template "header"}}
 
     <div class="uk-container">
@@ -18,7 +18,11 @@
                     {{ end }}
                 </div>
             </div>
-
+            <div class="uk-grid-small uk-child-width-auto" uk-grid>
+                <div>
+                    <a class="uk-button uk-button-text" href="/blog/{{ .ID }}/edit">Edit</a>
+                </div>
+            </div>
         </article>
     </div>
 

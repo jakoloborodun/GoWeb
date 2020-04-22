@@ -1,11 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/go-chi/chi"
 	"html/template"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
@@ -63,6 +65,9 @@ func main() {
 	r.Route("/", func(r chi.Router) {
 		r.Get("/blog", srv.getBlogPosts)
 		r.Get("/blog/{id}", srv.getSingleBlogPost)
+		r.Get("/blog/{id}/edit", srv.editSingleBlogPost)
+		r.Get("/blog/add", srv.newSingleBlogPost)
+		r.Post("/blog/save", srv.saveSingleBlogPost)
 	})
 
 	workDir, _ := os.Getwd()
@@ -94,12 +99,83 @@ func (srv *Server) getBlogPosts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (srv *Server) getSingleBlogPost(w http.ResponseWriter, r *http.Request) {
-	tpl, err := template.ParseFiles("static/templates/post.html", "static/templates/header.html", "static/templates/footer.html")
+	tpl, err := template.ParseFiles("static/templates/post_view.html", "static/templates/header.html", "static/templates/footer.html")
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
 		return
 	}
 
+	post, err := srv.getPostFromRequest(w, r)
+	if err == nil {
+		err = tpl.ExecuteTemplate(w, "post_view", post)
+		if err != nil {
+			srv.lg.WithError(err).Error("template")
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}
+}
+
+func (srv *Server) editSingleBlogPost(w http.ResponseWriter, r *http.Request) {
+	tpl, err := template.ParseFiles("static/templates/post_edit.html", "static/templates/header.html", "static/templates/footer.html")
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
+		return
+	}
+
+	post, err := srv.getPostFromRequest(w, r)
+	if err == nil {
+		err = tpl.ExecuteTemplate(w, "post_edit", post)
+		if err != nil {
+			srv.lg.WithError(err).Error("template")
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}
+}
+
+func (srv *Server) saveSingleBlogPost(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
+
+	idStr := r.PostFormValue("postID")
+	id, _ := strconv.ParseInt(idStr, 10, 64)
+
+	status := convertCheckbox(r.PostFormValue("status"))
+
+	title := r.PostFormValue("title")
+	body := r.PostFormValue("body")
+
+	if idStr != "" {
+		for index, item := range srv.Posts {
+			if item.ID == id {
+				srv.Posts[index].Title = title
+				srv.Posts[index].Text = body
+				srv.Posts[index].Status = status
+			}
+		}
+	} else {
+		id = rand.Int63n(1000000)
+		post := BlogPost{
+			ID:      id,
+			Title:   title,
+			Text:    body,
+			Created: time.Now(),
+			Status:  status,
+			Tags:    nil,
+		}
+		srv.Posts = append(srv.Posts, post)
+	}
+
+	http.Redirect(w, r, "/blog/"+strconv.FormatInt(id, 10), 302)
+}
+
+// Convert checkbox string value to boolean.
+func convertCheckbox(value string) bool {
+	if value == "on" {
+		return true
+	}
+	return false
+}
+
+func (srv *Server) getPostFromRequest(w http.ResponseWriter, r *http.Request) (post BlogPost, err error) {
 	postIDStr := chi.URLParam(r, "id")
 	PostID, _ := strconv.ParseInt(postIDStr, 10, 64)
 
@@ -111,10 +187,20 @@ func (srv *Server) getSingleBlogPost(w http.ResponseWriter, r *http.Request) {
 	post, found := postsMap[PostID]
 	if !found {
 		http.NotFound(w, r)
+		return BlogPost{}, errors.New("page not found")
+	}
+
+	return post, nil
+}
+
+func (srv *Server) newSingleBlogPost(w http.ResponseWriter, r *http.Request) {
+	tpl, err := template.ParseFiles("static/templates/post_edit.html", "static/templates/header.html", "static/templates/footer.html")
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
 		return
 	}
 
-	err = tpl.ExecuteTemplate(w, "post", post)
+	err = tpl.ExecuteTemplate(w, "post_edit", nil)
 	if err != nil {
 		srv.lg.WithError(err).Error("template")
 		w.WriteHeader(http.StatusInternalServerError)
