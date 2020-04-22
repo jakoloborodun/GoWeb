@@ -1,0 +1,37 @@
+{{ define "header" }}
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <title>{{- /*gotype: goweb/hw3.Server*/ -}}
+            {{ .Title }}</title>
+        {{template "head"}}
+    </head>
+    <body>
+    {{ template "navbar" }}
+{{ end }}
+
+{{ define "head" }}
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+    <!-- UIkit CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.4.1/dist/css/uikit.min.css"/>
+
+    <!-- UIkit JS -->
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.4.1/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.4.1/dist/js/uikit-icons.min.js"></script>
+{{ end }}
+
+{{ define "navbar" }}
+    <header>
+        <nav class="uk-navbar-container" uk-navbar>
+            <a class="uk-navbar-item uk-logo" href="/blog">Blog</a>
+            <div class="uk-navbar-left">
+                <ul class="uk-navbar-nav">
+                    <li><a href="/blog/add">New post</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+{{ end }}
