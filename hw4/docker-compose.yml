@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  # Database
+  mysql:
+    image: mysql:latest
+    container_name: dev_mysql
+    ports:
+      - '13306:13306'
+    volumes:
+      - ./db-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: goweb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user
+    restart: always
+
+  # PHP My Admin
+  phpmyadmin:
+    depends_on:
+      - mysql
+    image: phpmyadmin/phpmyadmin
+    container_name: dev_pma
+    links:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 13306
+      PMA_ARBITRARY: 1
+      MYSQL_ROOT_PASSWORD: root
+    restart: always
+    ports:
+      - 8183:80
