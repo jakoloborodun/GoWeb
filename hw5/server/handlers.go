@@ -2,9 +2,8 @@ package server
 
 import (
 	"github.com/go-chi/chi"
-	"goweb/hw4/models"
-	"goweb/hw4/utils"
-	"math/rand"
+	"hw5/models"
+	"hw5/utils"
 	"net/http"
 	"strconv"
 )
@@ -16,21 +15,9 @@ func (srv *Server) getTemplateHandler(w http.ResponseWriter, r *http.Request) {
 		templateName = srv.indexTemplate
 	}
 
-	posts, err := models.GetAllPosts(srv.db)
-	if err != nil {
-		srv.SendInternalErr(w, err)
-		return
-	}
-
-	categories, err := models.GetAllCategories(srv.db)
-	if err != nil {
-		srv.SendInternalErr(w, err)
-		return
-	}
-
 	srv.Page.Title = "Ivan's Blog"
-	srv.Page.Posts = posts
-	srv.Page.Categories = categories
+	srv.Page.Posts = models.GetAllPosts(srv.db)
+	srv.Page.Categories = models.GetAllCategories(srv.db)
 
 	tpl := srv.templates.Lookup(templateName + ".html")
 	if err := tpl.ExecuteTemplate(w, templateName, srv.Page); err != nil {
@@ -44,11 +31,7 @@ func (srv *Server) getBlogPostHandler(w http.ResponseWriter, r *http.Request) {
 	postIDStr := chi.URLParam(r, "id")
 	postID, _ := strconv.ParseInt(postIDStr, 10, 64)
 
-	post, err := models.GetPost(postID, srv.db)
-	if err != nil {
-		srv.SendInternalErr(w, err)
-		return
-	}
+	post := models.GetPost(postID, srv.db)
 
 	header := srv.templates.Lookup("header.html")
 	tpl := srv.templates.Lookup(templateName + ".html")
@@ -62,43 +45,10 @@ func (srv *Server) getBlogPostHandler(w http.ResponseWriter, r *http.Request) {
 	_ = footer.ExecuteTemplate(w, "footer", nil)
 }
 
-func (srv *Server) getCategoryHandler(w http.ResponseWriter, r *http.Request) {
-	templateName := srv.indexTemplate
-
-	cidStr := chi.URLParam(r, "cid")
-	cid, _ := strconv.ParseInt(cidStr, 10, 64)
-
-	posts, err := models.GetPostsByCategory(cid, srv.db)
-	if err != nil {
-		srv.SendInternalErr(w, err)
-		return
-	}
-
-	category, err := models.GetCategory(cid, srv.db)
-	if err != nil {
-		srv.SendInternalErr(w, err)
-		return
-	}
-
-	srv.Page.Title = "Category " + category.Title
-	srv.Page.Posts = posts
-
-	tpl := srv.templates.Lookup(templateName + ".html")
-
-	if err := tpl.ExecuteTemplate(w, templateName, srv.Page); err != nil {
-		srv.SendInternalErr(w, err)
-		return
-	}
-}
-
 func (srv *Server) newBlogPostHandler(w http.ResponseWriter, r *http.Request) {
 	templateName := "post_new"
 
-	categories, err := models.GetAllCategories(srv.db)
-	if err != nil {
-		srv.SendInternalErr(w, err)
-		return
-	}
+	categories := models.GetAllCategories(srv.db)
 
 	header := srv.templates.Lookup("header.html")
 	tpl := srv.templates.Lookup(templateName + ".html")
@@ -112,36 +62,14 @@ func (srv *Server) newBlogPostHandler(w http.ResponseWriter, r *http.Request) {
 	_ = footer.ExecuteTemplate(w, "footer", nil)
 }
 
-func (srv *Server) newCategoryHandler(w http.ResponseWriter, r *http.Request) {
-	templateName := "category_new"
-
-	header := srv.templates.Lookup("header.html")
-	tpl := srv.templates.Lookup(templateName + ".html")
-	footer := srv.templates.Lookup("footer.html")
-
-	_ = header.ExecuteTemplate(w, "header", srv.Page)
-	if err := tpl.ExecuteTemplate(w, templateName, nil); err != nil {
-		srv.SendInternalErr(w, err)
-		return
-	}
-	_ = footer.ExecuteTemplate(w, "footer", nil)
-}
-
 func (srv *Server) editBlogPostHandler(w http.ResponseWriter, r *http.Request) {
 	templateName := "post_edit"
 	postIDStr := chi.URLParam(r, "id")
 	postID, _ := strconv.ParseInt(postIDStr, 10, 64)
 
-	categories, err := models.GetAllCategories(srv.db)
-	if err != nil {
-		srv.SendInternalErr(w, err)
-		return
-	}
-	post, err := models.GetPost(postID, srv.db)
-	if err != nil {
-		srv.SendInternalErr(w, err)
-		return
-	}
+	categories := models.GetAllCategories(srv.db)
+	post := models.GetPost(postID, srv.db)
+
 	data := map[string]interface{}{
 		"post":       post,
 		"categories": categories,
@@ -162,42 +90,70 @@ func (srv *Server) editBlogPostHandler(w http.ResponseWriter, r *http.Request) {
 func (srv *Server) saveBlogPostHandler(w http.ResponseWriter, r *http.Request) {
 	_ = r.ParseForm()
 
+	status := utils.ConvertCheckbox(r.PostFormValue("status"))
+
 	idStr := r.PostFormValue("postID")
 	id, _ := strconv.ParseInt(idStr, 10, 64)
-
-	status := utils.ConvertCheckbox(r.PostFormValue("status"))
 
 	title := r.PostFormValue("title")
 	body := r.PostFormValue("body")
 
-	catIdStr := r.PostFormValue("category")
-	catId, _ := strconv.ParseInt(catIdStr, 10, 64)
-	category, _ := models.GetCategory(catId, srv.db)
+	var catId int
+	if catIdStr := r.PostFormValue("category"); catIdStr != "" {
+		catId, _ = strconv.Atoi(catIdStr)
+	}
 
 	if idStr != "" {
-		post := models.BlogPost{
-			ID:       id,
-			Title:    title,
-			Text:     body,
-			Status:   status,
-			Category: &category,
-		}
+		post := models.BlogPost{}
+		srv.db.First(&post, id)
 
-		if err := post.Update(srv.db); err != nil {
-			srv.SendInternalErr(w, err)
-			return
-		}
+		post.Title = title
+		post.Text = body
+		post.Status = status
+		post.CategoryID = catId
+
+		post.Update(srv.db)
 	} else {
-		id = rand.Int63n(1000000)
-		post := models.NewBlogPost(id, title, body, status, &category, "")
-
-		if err := post.Create(srv.db); err != nil {
-			srv.SendInternalErr(w, err)
-			return
-		}
+		post := models.NewBlogPost(title, body, status, catId, "")
+		post.Create(srv.db)
 	}
 
 	http.Redirect(w, r, "/blog", 302)
+}
+
+func (srv *Server) getCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	templateName := srv.indexTemplate
+
+	cidStr := chi.URLParam(r, "cid")
+	cid, _ := strconv.ParseInt(cidStr, 10, 64)
+
+	posts := models.GetPostsByCategory(cid, srv.db)
+	category := models.GetCategory(cid, srv.db)
+
+	srv.Page.Title = "Category " + category.Title
+	srv.Page.Posts = posts
+
+	tpl := srv.templates.Lookup(templateName + ".html")
+
+	if err := tpl.ExecuteTemplate(w, templateName, srv.Page); err != nil {
+		srv.SendInternalErr(w, err)
+		return
+	}
+}
+
+func (srv *Server) newCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	templateName := "category_new"
+
+	header := srv.templates.Lookup("header.html")
+	tpl := srv.templates.Lookup(templateName + ".html")
+	footer := srv.templates.Lookup("footer.html")
+
+	_ = header.ExecuteTemplate(w, "header", srv.Page)
+	if err := tpl.ExecuteTemplate(w, templateName, nil); err != nil {
+		srv.SendInternalErr(w, err)
+		return
+	}
+	_ = footer.ExecuteTemplate(w, "footer", nil)
 }
 
 func (srv *Server) saveCategoryHandler(w http.ResponseWriter, r *http.Request) {
@@ -206,13 +162,9 @@ func (srv *Server) saveCategoryHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.PostFormValue("title")
 	desc := r.PostFormValue("desc")
 
-	cid := rand.Int63n(1000000)
-	category := models.NewCategory(cid, title, desc)
+	category := models.NewCategory(title, desc)
 
-	if err := category.Create(srv.db); err != nil {
-		srv.SendInternalErr(w, err)
-		return
-	}
+	category.Create(srv.db)
 
 	http.Redirect(w, r, "/blog", 302)
 }

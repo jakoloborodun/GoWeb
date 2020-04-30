@@ -39,10 +39,11 @@
                                     {{ range $category := .Categories }}
                                         <li><a href="/category/{{ $category.ID }}">{{ $category.Title }}</a></li>
                                     {{ end }}
-                                    <li><a href="/category/add">Add new</a></li>
                                 </ul>
                             </div>
                         </li>
+                    {{ else }}
+                        <li><a href="/category/add">Add Category</a></li>
                     {{ end }}
                 </ul>
 
