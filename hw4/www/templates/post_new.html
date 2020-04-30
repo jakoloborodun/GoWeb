@@ -1,0 +1,48 @@
+{{ define "post_new" }}
+
+    <div class="uk-container">
+        <h1 class="uk-article-title uk-padding uk-padding-remove-left uk-padding-remove-right">
+            Add new Post
+        </h1>
+        <form class="uk-form-stacked" method="post" action="/blog/save">
+            <input type="hidden" name="postID" value="">
+            <div class="uk-margin">
+                <label class="uk-form-label" for="form-stacked-text">Title</label>
+                <div class="uk-form-controls">
+                    <input class="uk-input" id="form-stacked-text" name="title" type="text">
+                </div>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label" for="form-stacked-textarea">Body</label>
+                <div class="uk-form-controls">
+                    <textarea id="form-stacked-textarea" class="uk-textarea" name="body" rows="5"></textarea>
+                </div>
+            </div>
+
+            <div class="uk-margin">
+                <div class="uk-form-label">Status</div>
+                <div class="uk-form-controls">
+                    <label><input class="uk-checkbox" name="status" type="checkbox"> Published</label>
+                </div>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label" for="form-stacked-select">Category</label>
+                <div class="uk-form-controls">
+                    <select class="uk-select" id="form-stacked-select" name="category">
+                        <option disabled selected value> -- Select a category -- </option>
+                        {{ range $category := . }}
+                            {{- /*gotype: goweb/hw4/models.Category*/ -}}
+                            <option value="{{ $category.ID }}">{{ $category.Title }}</option>
+                        {{ end }}
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="uk-button uk-button-primary">Save</button>
+
+        </form>
+    </div>
+
+{{ end }}
