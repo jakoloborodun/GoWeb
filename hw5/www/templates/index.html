@@ -1,4 +1,4 @@
-{{- /*gotype: goweb/hw4/models.Page*/ -}}
+{{- /*gotype: goweb/hw5/models.Page*/ -}}
 {{ define "index" }}
 
     {{ template "header" . }}
@@ -14,9 +14,8 @@
 
 {{ define "Posts" }}
     <div class="uk-child-width-1-2@m" uk-grid>
-        {{- /*gotype: goweb/hw4/models.Page*/ -}}
         {{ range $key, $value := .Posts }}
-            {{- /*gotype: goweb/hw4/models.BlogPost*/ -}}
+            {{- /*gotype: hw5/models.BlogPost*/ -}}
             {{ if .Status }}
                 <div>
                     <div class="uk-card uk-card-default">
@@ -30,16 +29,18 @@
                                         <a href="/blog/{{ .ID }}" class="uk-link-heading">{{ .Title }}</a>
                                     </h3>
                                     <p class="uk-text-meta uk-margin-remove-top">
-                                        <time datetime="{{ .Created.Format "2006-01-02 15:04" }}">{{ .Created.Format "Jan 02, 2006 15:04" }}</time>
+                                        <time datetime="{{ .CreatedAt.Format "2006-01-02 15:04" }}">{{ .CreatedAt.Format "Jan 02, 2006 15:04" }}</time>
                                     </p>
                                 </div>
                             </div>
                         </div>
                         <div class="uk-card-body">
                             <p>{{ .Text }}</p>
-                            <div class="uk-align-left">
-                                <a href="/category/{{ .Category.ID }}"><div class="uk-card-badge uk-label">{{ .Category.Title }}</div></a>
-                            </div>
+                            {{ if .Category }}
+                                <div class="uk-align-left">
+                                    <a href="/category/{{ .Category.ID }}"><div class="uk-card-badge uk-label">{{ .Category.Title }}</div></a>
+                                </div>
+                            {{ end }}
                         </div>
                         <div class="uk-card-footer">
                             <a href="/blog/{{ .ID }}" class="uk-button uk-button-text">Read more</a>

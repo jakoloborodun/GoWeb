@@ -19,13 +19,11 @@ func main() {
 
 	lg := utils.NewLogger()
 
-	db, err := gorm.Open("mysql", "admin:admin@tcp(172.20.0.2:3306)/gorm")
+	db, err := gorm.Open("mysql", "admin:admin@tcp(172.20.0.2:3306)/gorm?parseTime=true")
 	if err != nil {
 		lg.WithError(err).Fatal("can't connect to db")
 	}
 	defer db.Close()
-
-	db = db.Debug()
 
 	srv := server.New(lg, *flagRootDir, db)
 	srv.ParseTemplates()
