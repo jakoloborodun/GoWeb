@@ -11,6 +11,9 @@ func (srv *Server) bindRoutes(r *chi.Mux) {
 		r.Get("/blog/{id}/edit", srv.editBlogPostHandler)
 		r.Get("/blog/add", srv.newBlogPostHandler)
 		r.Post("/blog/save", srv.saveBlogPostHandler)
+		r.Get("/category/{cid}", srv.getCategoryHandler)
+		r.Get("/category/add", srv.newCategoryHandler)
+		r.Post("/category/save", srv.saveCategoryHandler)
 		//r.Route("/api/v1", func(r chi.Router) {
 		//	r.Post("/tasks", srv.postTaskHandler)
 		//	r.Delete("/tasks/{id}", srv.deleteTaskHandler)

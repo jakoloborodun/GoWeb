@@ -28,6 +28,7 @@ func (srv *Server) getTemplateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	srv.Page.Title = "Ivan's Blog"
 	srv.Page.Posts = posts
 	srv.Page.Categories = categories
 
@@ -61,6 +62,35 @@ func (srv *Server) getBlogPostHandler(w http.ResponseWriter, r *http.Request) {
 	_ = footer.ExecuteTemplate(w, "footer", nil)
 }
 
+func (srv *Server) getCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	templateName := srv.indexTemplate
+
+	cidStr := chi.URLParam(r, "cid")
+	cid, _ := strconv.ParseInt(cidStr, 10, 64)
+
+	posts, err := models.GetPostsByCategory(cid, srv.db)
+	if err != nil {
+		srv.SendInternalErr(w, err)
+		return
+	}
+
+	category, err := models.GetCategory(cid, srv.db)
+	if err != nil {
+		srv.SendInternalErr(w, err)
+		return
+	}
+
+	srv.Page.Title = "Category " + category.Title
+	srv.Page.Posts = posts
+
+	tpl := srv.templates.Lookup(templateName + ".html")
+
+	if err := tpl.ExecuteTemplate(w, templateName, srv.Page); err != nil {
+		srv.SendInternalErr(w, err)
+		return
+	}
+}
+
 func (srv *Server) newBlogPostHandler(w http.ResponseWriter, r *http.Request) {
 	templateName := "post_new"
 
@@ -76,6 +106,21 @@ func (srv *Server) newBlogPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	_ = header.ExecuteTemplate(w, "header", srv.Page)
 	if err := tpl.ExecuteTemplate(w, templateName, categories); err != nil {
+		srv.SendInternalErr(w, err)
+		return
+	}
+	_ = footer.ExecuteTemplate(w, "footer", nil)
+}
+
+func (srv *Server) newCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	templateName := "category_new"
+
+	header := srv.templates.Lookup("header.html")
+	tpl := srv.templates.Lookup(templateName + ".html")
+	footer := srv.templates.Lookup("footer.html")
+
+	_ = header.ExecuteTemplate(w, "header", srv.Page)
+	if err := tpl.ExecuteTemplate(w, templateName, nil); err != nil {
 		srv.SendInternalErr(w, err)
 		return
 	}
@@ -150,6 +195,23 @@ func (srv *Server) saveBlogPostHandler(w http.ResponseWriter, r *http.Request) {
 			srv.SendInternalErr(w, err)
 			return
 		}
+	}
+
+	http.Redirect(w, r, "/blog", 302)
+}
+
+func (srv *Server) saveCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
+
+	title := r.PostFormValue("title")
+	desc := r.PostFormValue("desc")
+
+	cid := rand.Int63n(1000000)
+	category := models.NewCategory(cid, title, desc)
+
+	if err := category.Create(srv.db); err != nil {
+		srv.SendInternalErr(w, err)
+		return
 	}
 
 	http.Redirect(w, r, "/blog", 302)

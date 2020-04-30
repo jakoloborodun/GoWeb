@@ -93,6 +93,35 @@ func GetAllPosts(db *sql.DB) (BlogPosts, error) {
 	return posts, err
 }
 
+func GetPostsByCategory(cid int64, db *sql.DB) (BlogPosts, error) {
+	rows, err := db.Query("SELECT * FROM BlogPost WHERE category_id = ?", cid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	posts := BlogPosts{}
+	var categoryId int64
+	var timestamp int64
+
+	for rows.Next() {
+		p := BlogPost{}
+		if err = rows.Scan(&p.ID, &p.Title, &p.Text, &timestamp, &p.Status, &categoryId, &p.Content); err != nil {
+			return nil, err
+		}
+		p.Created = time.Unix(timestamp, 0)
+		category, err := GetCategory(categoryId, db)
+		if err != nil {
+			return posts, err
+		}
+		p.Category = &category
+
+		posts = append(posts, p)
+	}
+
+	return posts, err
+}
+
 func NewBlogPost(id int64, title string, text string, status bool, category *Category, content string) *BlogPost {
 	return &BlogPost{
 		ID:       id,
