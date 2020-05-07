@@ -7,7 +7,11 @@
 
             <p class="uk-article-meta">Written by <a href="#">Admin</a> on {{ .Created.Format "Jan 02, 2006 15:04" }}. Posted in <a href="/blog">Blog</a></p>
 
-            <p>{{ .Text }}</p>
+            {{ if .Content }}
+              <div>{{ .Content }}</div>
+            {{ else }}
+                <p>{{ .Text }}</p>
+            {{ end }}
 
             {{ if .Category }}
                 <div class="uk-grid-small uk-child-width-auto" uk-grid>

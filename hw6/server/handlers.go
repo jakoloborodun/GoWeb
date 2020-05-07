@@ -2,7 +2,9 @@ package server
 
 import (
 	"github.com/go-chi/chi"
+	"github.com/russross/blackfriday/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"html/template"
 	"hw6/models"
 	"hw6/utils"
 	"net/http"
@@ -47,6 +49,7 @@ func (srv *Server) getBlogPostHandler(w http.ResponseWriter, r *http.Request) {
 		srv.SendInternalErr(w, err)
 		return
 	}
+	post.Content = template.HTML(blackfriday.Run([]byte(post.Text), blackfriday.WithNoExtensions()))
 
 	header := srv.templates.Lookup("header.html")
 	tpl := srv.templates.Lookup(templateName + ".html")

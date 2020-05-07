@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"html/template"
 	"time"
 )
 
@@ -15,7 +16,7 @@ type BlogPost struct {
 	Status   bool
 	Created  time.Time
 	Category *Category
-	Content  string
+	Content  template.HTML
 }
 
 func (p *BlogPost) GetMongoCollectionName() string {
@@ -85,7 +86,7 @@ func FindPost(ctx context.Context, db *mongo.Database, field string, value inter
 	return posts, nil
 }
 
-func NewBlogPost(title string, text string, status bool, category *Category, content string) *BlogPost {
+func NewBlogPost(title string, text string, status bool, category *Category, content template.HTML) *BlogPost {
 	return &BlogPost{
 		Mongo:    Mongo{ID: primitive.NewObjectID()},
 		Title:    title,
