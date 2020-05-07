@@ -1,0 +1,28 @@
+{{ define "category_new" }}
+
+    <div class="uk-container">
+        <h1 class="uk-article-title uk-padding uk-padding-remove-left uk-padding-remove-right">
+            Add new Category
+        </h1>
+        <form class="uk-form-stacked" method="post" action="/category/save">
+            <input type="hidden" name="cid" value="">
+            <div class="uk-margin">
+                <label class="uk-form-label" for="form-category-title">Title</label>
+                <div class="uk-form-controls">
+                    <input class="uk-input" id="form-category-title" name="title" type="text">
+                </div>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label" for="form-category-desc">Description</label>
+                <div class="uk-form-controls">
+                    <textarea id="form-category-desc" class="uk-textarea" name="desc" rows="5"></textarea>
+                </div>
+            </div>
+
+            <button type="submit" class="uk-button uk-button-primary">Save</button>
+
+        </form>
+    </div>
+
+{{ end }}
