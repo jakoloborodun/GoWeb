@@ -1,0 +1,49 @@
+{{ define "post_edit" }}
+
+    <div class="uk-container">
+        {{ if .post }}
+            <h1 class="uk-article-title uk-padding uk-padding-remove-left uk-padding-remove-right">
+                Edit Post <span class="uk-text-italic">{{ .post.Title }}</span>
+            </h1>
+
+            <form class="uk-form-stacked" method="post" action="/blog/save">
+                <input type="hidden" name="postID" value="{{ .post.ID.Hex }}">
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="form-stacked-text">Title</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" id="form-stacked-text" name="title" type="text" value="{{ .post.Title }}">
+                    </div>
+                </div>
+
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="form-stacked-textarea">Body</label>
+                    <div class="uk-form-controls">
+                        <textarea id="form-stacked-textarea" class="uk-textarea" name="body" rows="5">{{ .post.Text }}</textarea>
+                    </div>
+                </div>
+
+                <div class="uk-margin">
+                    <div class="uk-form-label">Status</div>
+                    <div class="uk-form-controls">
+                        <label><input class="uk-checkbox" name="status" type="checkbox" {{ if .post.Status }} checked {{ end }}> Published</label>
+                    </div>
+                </div>
+
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="form-stacked-select">Category</label>
+                    <div class="uk-form-controls">
+                        <select class="uk-select" id="form-stacked-select" name="category">
+                            {{ range $key, $value := .categories }}
+                                <option value="{{ .ID.Hex }}" {{ if eq .ID.Hex $.post.Category.ID.Hex }} selected {{ end }}>{{ .Title }}</option>
+                            {{ end }}
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="uk-button uk-button-primary">Save</button>
+
+            </form>
+        {{ end }}
+    </div>
+
+{{ end }}
