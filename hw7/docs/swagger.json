@@ -1,0 +1,149 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {},
+        "license": {}
+    },
+    "paths": {
+        "/api/v1/docs/swagger.json": {
+            "get": {
+                "description": "the function will return data from swagger.json file",
+                "tags": [
+                    "swagger"
+                ],
+                "summary": "Get swagger.json content",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorModel"
+                        }
+                    }
+                }
+            }
+        },
+        "/blog/save": {
+            "post": {
+                "tags": [
+                    "server"
+                ],
+                "summary": "Save Blog Post entry",
+                "parameters": [
+                    {
+                        "description": "Published status",
+                        "name": "status",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Post unique ID",
+                        "name": "postID",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Title",
+                        "name": "title",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Body content",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Related category",
+                        "name": "category",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorModel"
+                        }
+                    }
+                }
+            }
+        },
+        "/{template}": {
+            "get": {
+                "description": "the function will execute the provided template",
+                "tags": [
+                    "server"
+                ],
+                "summary": "getTemplateHandler function",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Template name",
+                        "name": "template",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrorModel"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.ErrorModel": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "err": {
+                    "type": "string"
+                },
+                "internal": {
+                    "type": "object"
+                }
+            }
+        }
+    }
+}
