@@ -10,7 +10,13 @@ import (
 	"net/http"
 )
 
-// getTemplateHandler - возвращает шаблон
+// @Summary getTemplateHandler function
+// @Param template path string false "Template name"
+// @Description the function will execute the provided template
+// @Tags server
+// @Success 200 {string} string
+// @Failure 500 {object} models.ErrorModel
+// @Router /{template} [get]
 func (srv *Server) getTemplateHandler(w http.ResponseWriter, r *http.Request) {
 	templateName := chi.URLParam(r, "template")
 	if templateName == "" {
@@ -135,6 +141,16 @@ func (srv *Server) deleteBlogPostHandler(w http.ResponseWriter, r *http.Request)
 	http.Redirect(w, r, "/blog", 302)
 }
 
+// @Summary Save Blog Post entry
+// @Param status body string true "Published status"
+// @Param postID body string true "Post unique ID"
+// @Param title body string true "Title"
+// @Param body body string false "Body content"
+// @Param category body string false "Related category"
+// @Tags server
+// @Success 200 {string} string
+// @Failure 500 {object} models.ErrorModel
+// @Router /blog/save [post]
 func (srv *Server) saveBlogPostHandler(w http.ResponseWriter, r *http.Request) {
 	_ = r.ParseForm()
 
@@ -228,4 +244,14 @@ func (srv *Server) saveCategoryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/blog", 302)
+}
+
+// @Summary Get swagger.json content
+// @Description the function will return data from swagger.json file
+// @Tags swagger
+// @Success 200 {string} string
+// @Failure 500 {object} models.ErrorModel
+// @Router /api/v1/docs/swagger.json [get]
+func HandlerSwaggerJSON(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./docs/swagger.json")
 }

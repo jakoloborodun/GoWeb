@@ -1,0 +1,95 @@
+definitions:
+  models.ErrorModel:
+    properties:
+      code:
+        type: integer
+      desc:
+        type: string
+      err:
+        type: string
+      internal:
+        type: object
+    type: object
+info:
+  contact: {}
+  license: {}
+paths:
+  /{template}:
+    get:
+      description: the function will execute the provided template
+      parameters:
+      - description: Template name
+        in: path
+        name: template
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorModel'
+      summary: getTemplateHandler function
+      tags:
+      - server
+  /api/v1/docs/swagger.json:
+    get:
+      description: the function will return data from swagger.json file
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorModel'
+      summary: Get swagger.json content
+      tags:
+      - swagger
+  /blog/save:
+    post:
+      parameters:
+      - description: Published status
+        in: body
+        name: status
+        required: true
+        schema:
+          type: string
+      - description: Post unique ID
+        in: body
+        name: postID
+        required: true
+        schema:
+          type: string
+      - description: Title
+        in: body
+        name: title
+        required: true
+        schema:
+          type: string
+      - description: Body content
+        in: body
+        name: body
+        schema:
+          type: string
+      - description: Related category
+        in: body
+        name: category
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorModel'
+      summary: Save Blog Post entry
+      tags:
+      - server
+swagger: "2.0"
