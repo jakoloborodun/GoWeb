@@ -5,6 +5,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"hw7/conf"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -15,6 +16,7 @@ var (
 	ctx = context.TODO()
 	db  *mongo.Database
 	lg  *logrus.Logger
+	cfg *conf.Config
 )
 
 func setupDB() {
@@ -33,7 +35,7 @@ func disconnectDB() {
 
 func TestNew(t *testing.T) {
 	setupDB()
-	srv := New(lg, "./www", db)
+	srv := New(lg, "./www", db, cfg)
 
 	if reflect.TypeOf(srv) != reflect.TypeOf(&Server{}) {
 		t.Errorf("wrong type of server: got %v, expected %v", reflect.TypeOf(srv), reflect.TypeOf(&Server{}))
@@ -49,7 +51,7 @@ func TestServer_getTemplateHandler(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	srv := New(lg, "../www", db)
+	srv := New(lg, "../www", db, cfg)
 	srv.ParseTemplates()
 	handler := http.HandlerFunc(srv.getTemplateHandler)
 	handler.ServeHTTP(rr, req)
