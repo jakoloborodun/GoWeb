@@ -1,0 +1,17 @@
+# App config
+server:
+  name: Ivan's Blog
+  root_dir: ./www
+  host: 127.0.0.1
+  port: 8080
+database:
+  db_name: gomongo
+  db_user: root
+  db_pass: root
+  db_host: localhost
+  db_port: 27017
+logger:
+  level: Info
+  report_caller: false
+  output: app.log
+  syslog: false

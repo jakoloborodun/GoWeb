@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	"html/template"
+	"hw7/conf"
 	"hw7/models"
 	"io/ioutil"
 	"net/http"
@@ -24,6 +25,7 @@ type Server struct {
 	imagesDir     string
 	indexTemplate string
 	Page          models.Page
+	conf          *conf.Config
 }
 
 func (srv *Server) ParseTemplates() {
@@ -47,7 +49,7 @@ func (srv *Server) ParseTemplates() {
 	}
 }
 
-func New(lg *logrus.Logger, rootDir string, db *mongo.Database) *Server {
+func New(lg *logrus.Logger, rootDir string, db *mongo.Database, cfg *conf.Config) *Server {
 	posts, _ := models.GetAllPosts(context.TODO(), db)
 	categories, _ := models.GetAllCategories(context.TODO(), db)
 
@@ -59,10 +61,11 @@ func New(lg *logrus.Logger, rootDir string, db *mongo.Database) *Server {
 		imagesDir:     "/images",
 		indexTemplate: "index",
 		Page: models.Page{
-			Title:      "Ivan's Blog",
+			Title:      cfg.Server.Name,
 			Posts:      posts,
 			Categories: categories,
 		},
+		conf: cfg,
 	}
 }
 
